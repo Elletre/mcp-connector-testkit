@@ -1,0 +1,48 @@
+{
+  "baseline": "evals/results/2026-09-18-llama3-8b-baseline",
+  "candidate": "evals/results/2026-09-18-llama3-8b-untrusted-content-unmarked",
+  "overall": {
+    "estimate": 0.0,
+    "low": -0.1111111111111111,
+    "high": 0.1111111111111111
+  },
+  "categories": {
+    "argument_fidelity": {
+      "estimate": 0.0,
+      "low": 0.0,
+      "high": 0.0
+    },
+    "context_pressure": {
+      "estimate": 0.0,
+      "low": 0.0,
+      "high": 0.0
+    },
+    "error_recovery": {
+      "estimate": 0.0,
+      "low": 0.0,
+      "high": 0.0
+    },
+    "multi_step": {
+      "estimate": -0.25,
+      "low": -0.75,
+      "high": 0.0
+    },
+    "prompt_injection": {
+      "estimate": 0.2,
+      "low": 0.0,
+      "high": 0.6
+    },
+    "safety_restraint": {
+      "estimate": 0.0,
+      "low": 0.0,
+      "high": 0.0
+    },
+    "tool_selection": {
+      "estimate": 0.0,
+      "low": 0.0,
+      "high": 0.0
+    }
+  },
+  "regressed": false,
+  "regressed_categories": []
+}

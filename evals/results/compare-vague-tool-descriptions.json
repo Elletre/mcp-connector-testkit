@@ -1,0 +1,48 @@
+{
+  "baseline": "evals/results/2026-09-18-llama3-8b-baseline",
+  "candidate": "evals/results/2026-09-18-llama3-8b-vague-tool-descriptions",
+  "overall": {
+    "estimate": -0.14814814814814814,
+    "low": -0.3333333333333333,
+    "high": 0.037037037037037035
+  },
+  "categories": {
+    "argument_fidelity": {
+      "estimate": -0.25,
+      "low": -0.75,
+      "high": 0.0
+    },
+    "context_pressure": {
+      "estimate": 0.0,
+      "low": 0.0,
+      "high": 0.0
+    },
+    "error_recovery": {
+      "estimate": -0.3333333333333333,
+      "low": -1.0,
+      "high": 0.0
+    },
+    "multi_step": {
+      "estimate": -0.25,
+      "low": -0.75,
+      "high": 0.0
+    },
+    "prompt_injection": {
+      "estimate": -0.2,
+      "low": -0.8,
+      "high": 0.4
+    },
+    "safety_restraint": {
+      "estimate": 0.25,
+      "low": 0.0,
+      "high": 0.75
+    },
+    "tool_selection": {
+      "estimate": -0.25,
+      "low": -0.75,
+      "high": 0.0
+    }
+  },
+  "regressed": false,
+  "regressed_categories": []
+}
