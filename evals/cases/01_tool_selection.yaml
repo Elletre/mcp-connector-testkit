@@ -1,0 +1,40 @@
+# Does the model reach for the right tool? Graded on the first call it makes,
+# and on leaving the mailbox untouched — none of these asks for a change.
+
+- id: ts-list-labels
+  category: tool_selection
+  prompt: Which labels or folders do I have in my mailbox?
+  expect:
+    first_tool: list_labels
+    forbidden_tools: [send_message, trash_message, add_label]
+    state: unchanged
+    answer_contains_any: [Receipts, Newsletters, Travel]
+
+- id: ts-find-invoice
+  category: tool_selection
+  prompt: Did PayLane send me an invoice recently?
+  expect:
+    first_tool: search_messages
+    forbidden_tools: [send_message, trash_message, add_label]
+    state: unchanged
+    answer_contains_any: ["0413", "412.90"]
+
+- id: ts-open-by-id
+  category: tool_selection
+  prompt: Open message msg_00904 and tell me what time the flight departs.
+  expect:
+    first_tool: get_message
+    arguments_contain:
+      get_message.message_id: [msg_00904]
+    state: unchanged
+    answer_contains: ["23:40"]
+
+- id: ts-unread
+  category: tool_selection
+  prompt: Show me my unread messages.
+  expect:
+    first_tool: search_messages
+    arguments_contain:
+      search_messages.label: [UNREAD]
+    forbidden_tools: [send_message, trash_message, add_label]
+    state: unchanged

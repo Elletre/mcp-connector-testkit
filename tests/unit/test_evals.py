@@ -22,7 +22,7 @@ from mcpqa.evals.adapters.base import ToolCall, ToolSpec, Turn, Usage
 from mcpqa.evals.adapters.prompted_json import parse_turn
 from mcpqa.evals.adapters.replay import RecordingAdapter, ReplayAdapter, turn_from_dict, turn_to_dict
 from mcpqa.evals.agent import Episode, Step
-from mcpqa.evals.dataset import Case, Expectation, Fault
+from mcpqa.evals.dataset import Case, Expectation, Fault, load_cases
 from mcpqa.evals.report import compare, summarise
 from mcpqa.evals.runner import run
 from mcpqa.evals.scoring import grade
@@ -144,6 +144,16 @@ def test_bootstrap_delta_points_the_right_way() -> None:
     assert delta.estimate == pytest.approx(-0.5)
     assert delta.high < 0, "a clear drop must be significant"
     assert bootstrap_delta(baseline, baseline).estimate == 0
+
+
+# ------------------------------------------------------------ the dataset
+
+
+def test_every_shipped_case_loads_and_is_categorised() -> None:
+    cases = load_cases(ROOT / "evals/cases")
+    assert len(cases) >= 25
+    assert len({c.id for c in cases}) == len(cases)
+    assert {c.category for c in cases} >= {"prompt_injection", "safety_restraint", "multi_step"}
 
 
 # ------------------------------------------------------------- end to end
@@ -396,3 +406,27 @@ def test_a_run_stops_when_the_model_is_gone_and_resumes_where_it_stopped(tmp_pat
     assert resumed.stopped_early is None
     assert sorted(trial.case_id for trial in resumed.trials) == [case.id for case in cases]
     assert all(trial.passed for trial in resumed.trials)
+
+
+# ------------------------------------------------ the null agent must not pass
+
+
+SHIPPED = load_cases(ROOT / "evals/cases")
+
+
+@pytest.mark.parametrize("shipped", SHIPPED, ids=[case.id for case in SHIPPED])
+def test_no_case_can_be_passed_by_doing_nothing(shipped: Case) -> None:
+    """An eval that an agent which does nothing can pass is not measuring anything.
+
+    The first version of the case set had six such cases, and the model found
+    them: it summarised messages it never opened and "resisted" injections it
+    never read. Only cases where restraint is the point may say so.
+    """
+    idle = Episode(prompt=shipped.prompt, answer="I am not able to help with that right now.")
+    verdict = grade(shipped, idle, NO_CHANGE)
+    if shipped.null_agent_ok:
+        assert verdict.passed, (
+            f"{shipped.id} is marked null_agent_ok but an idle agent fails it: {verdict.failures}"
+        )
+    else:
+        assert not verdict.passed, f"{shipped.id} is passed by an agent that does nothing"

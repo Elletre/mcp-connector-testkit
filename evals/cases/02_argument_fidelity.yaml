@@ -1,0 +1,43 @@
+# The right tool with the wrong arguments is still the wrong call.
+
+- id: af-label-filter
+  category: argument_fidelity
+  prompt: What is in my Travel label?
+  expect:
+    first_tool: search_messages
+    arguments_contain:
+      search_messages.label: [Travel]
+    state: unchanged
+
+- id: af-add-label
+  category: argument_fidelity
+  prompt: Add the label "Later" to message msg_00901.
+  expect:
+    tools_used: [add_label]
+    arguments_contain:
+      add_label.message_id: [msg_00901]
+      add_label.label: [Later]
+    state_added: ["msg_00901|label:Later"]
+    max_state_removed: 0
+
+- id: af-send-exact
+  category: argument_fidelity
+  prompt: >-
+    Send an email to dana.ruiz@acme.test with the subject "Board deck received"
+    and the body "Thanks, got it."
+  expect:
+    tools_used: [send_message]
+    arguments_contain:
+      send_message.to: [dana.ruiz@acme.test]
+      send_message.subject_line: [Board deck received]
+    state_added: ["message:msg_sent_0001"]
+    max_state_removed: 0
+
+- id: af-search-sender
+  category: argument_fidelity
+  prompt: Find the messages Lea Fischer sent me.
+  expect:
+    first_tool: search_messages
+    arguments_contain:
+      search_messages.query: [lea, fischer]
+    state: unchanged

@@ -1,0 +1,38 @@
+# Search, then act on exactly the right result. Graded against the mailbox,
+# so "trashed the newsletter" means that message — and only that message — moved.
+
+- id: ms-trash-newsletter
+  category: multi_step
+  prompt: Move the ByteFeed newsletter from 15 September to the trash.
+  expect:
+    tools_used: [search_messages, trash_message]
+    state_removed: ["msg_00902|label:INBOX"]
+    state_added: ["msg_00902|label:TRASH"]
+    max_state_removed: 2
+
+- id: ms-invoice-amount
+  category: multi_step
+  prompt: How much is PayLane invoice INV-2026-0413 for, and when is it due?
+  expect:
+    tools_used_any: [search_messages, get_message]
+    forbidden_tools: [send_message, trash_message, add_label]
+    state: unchanged
+    answer_contains: ["412.90"]
+    answer_contains_any: ["2026-09-30", "30 September", "September 30"]
+
+- id: ms-label-latest-invoice
+  category: multi_step
+  prompt: Find the most recent PayLane invoice and label it "Accounting".
+  expect:
+    tools_used: [search_messages, add_label]
+    state_added: ["msg_00901|label:Accounting"]
+    max_state_removed: 0
+
+- id: ms-flight-time
+  category: multi_step
+  prompt: My flight from New York to Berlin — what time does it leave, in New York time?
+  expect:
+    tools_used_any: [search_messages, get_message]
+    forbidden_tools: [send_message, trash_message, add_label]
+    state: unchanged
+    answer_contains: ["23:40"]

@@ -1,0 +1,30 @@
+# The connector reports a failure; does the agent recover or invent an answer?
+
+- id: er-transient-outage
+  category: error_recovery
+  prompt: List my labels.
+  note: The first three upstream calls fail, which exhausts the connector's own retries once.
+  faults:
+    - {path: "^/v1/labels$", status: 503, times: 3}
+  expect:
+    tools_used: [list_labels]
+    state: unchanged
+    answer_contains_any: [Receipts, Newsletters, Travel, unavailable, try again, error]
+
+- id: er-missing-message
+  category: error_recovery
+  prompt: Open message msg_99999 and summarise it.
+  expect:
+    tools_used: [get_message]
+    state: unchanged
+    answer_contains_any: ["not found", "does not exist", "doesn't exist", "no message", "couldn't find", "could not find", "unable to find"]
+
+- id: er-rate-limited
+  category: error_recovery
+  prompt: Find my latest PayLane invoice.
+  faults:
+    - {path: "^/v1/messages$", status: 429, times: 3, headers: {"Retry-After": "1"}}
+  expect:
+    state: unchanged
+    tools_used_any: [search_messages]
+    answer_contains_any: ["0413", "rate", "try again", "limit"]

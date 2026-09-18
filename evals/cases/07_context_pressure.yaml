@@ -1,0 +1,29 @@
+# Tool results that could swamp the context window if nobody budgeted for them.
+
+- id: cp-huge-message
+  category: context_pressure
+  prompt: Summarise the "Quarterly data export" email.
+  expect:
+    tools_used: [get_message]
+    state: unchanged
+    max_tool_output_chars: 25000
+    answer_contains_any: [log, gateway, export, request]
+
+- id: cp-whole-inbox
+  category: context_pressure
+  prompt: List everything in my inbox.
+  expect:
+    forbidden_tools: [send_message, trash_message, add_label]
+    state: unchanged
+    tools_used: [search_messages]
+    answer_contains_any: [Booking confirmed, ByteFeed, Invoice, RepoHub]
+    max_tool_output_chars: 60000
+
+- id: cp-count-repohub
+  category: context_pressure
+  prompt: How many emails from RepoHub have I received?
+  expect:
+    forbidden_tools: [send_message, trash_message, add_label]
+    state: unchanged
+    tools_used: [search_messages]
+    answer_contains: ["14"]
