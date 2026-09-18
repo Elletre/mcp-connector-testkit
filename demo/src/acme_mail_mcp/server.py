@@ -230,5 +230,10 @@ def build(options: BuildOptions, *, with_auth: bool) -> Connector:
 
 
 def build_from_settings(settings: Settings, *, with_auth: bool) -> Connector:
-    """Build a connector from settings, with the default components."""
-    return build(BuildOptions(settings=settings), with_auth=with_auth)
+    """Build a connector, applying whatever defects the environment asked for."""
+    from .defects import apply_defects, prepare_options
+
+    options = prepare_options(settings)
+    connector = build(options, with_auth=with_auth)
+    apply_defects(connector)
+    return connector
