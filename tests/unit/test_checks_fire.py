@@ -12,7 +12,13 @@ SDK, precisely so they *can* be wrong.
 from __future__ import annotations
 
 import json
+import os
+import socket
+import subprocess
 import sys
+import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -21,10 +27,11 @@ import pytest
 from mcpqa.checks import Profile, run_checks
 from mcpqa.checks.model import REGISTRY
 from mcpqa.protocol import Era
-from mcpqa.target import StdioTarget
+from mcpqa.target import HttpTarget, StdioTarget
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixture_servers"
 MINI_STDIO = FIXTURES / "mini_stdio.py"
+MINI_HTTP = FIXTURES / "mini_http.py"
 
 SAMPLES = {
     "echo": [{"text": "hi"}],
@@ -57,6 +64,19 @@ STDIO_VIOLATIONS = [
     ("P-018", "slow-serial"),
     ("P-019", "no-capabilities"),
     ("P-020", "unknown-tool-500"),
+]
+
+HTTP_VIOLATIONS = [
+    ("H-001", "no-origin-check"),
+    ("H-002", "notification-200"),
+    ("H-003", "wrong-content-type"),
+    ("H-004", "no-header-validation"),
+    ("H-005", "no-header-validation"),
+    ("H-006", "no-header-validation"),
+    ("H-007", "unknown-method-200"),
+    ("H-008", "no-auth"),
+    ("H-009", "no-prm"),
+    ("H-010", "accepts-any-token"),
 ]
 
 NOT_COVERED_HERE: set[str] = set()
@@ -103,6 +123,31 @@ def stdio_fixture(state: Path, *, break_id: str = "") -> StdioTarget:
     )
 
 
+@contextmanager
+def http_fixture(state: Path, *, break_id: str = "") -> Iterator[HttpTarget]:
+    port = _free_port()
+    resource = f"http://127.0.0.1:{port}/mcp"
+    env = {
+        **os.environ,
+        "MINI_BREAK": break_id,
+        "MINI_STATE": str(state),
+        "MINI_PORT": str(port),
+        "MINI_RESOURCE_URL": resource,
+    }
+    process = subprocess.Popen(
+        [sys.executable, str(MINI_HTTP)], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    try:
+        _wait_for_port(port, process)
+        yield HttpTarget(url=resource, bearer="mini_token", name="mini-http")
+    finally:
+        process.terminate()
+        try:
+            process.wait(timeout=10)
+        except subprocess.TimeoutExpired:  # pragma: no cover
+            process.kill()
+
+
 def eras_for(check_id: str) -> tuple[Era, ...]:
     return REGISTRY[check_id].eras
 
@@ -141,12 +186,22 @@ def test_check_fires_on_a_server_that_breaks_its_rule(check_id: str, break_id: s
     assert_fires(check_id, break_id, report)
 
 
+@pytest.mark.parametrize(("check_id", "break_id"), HTTP_VIOLATIONS, ids=[c for c, _ in HTTP_VIOLATIONS])
+def test_http_check_fires_on_a_server_that_breaks_its_rule(check_id: str, break_id: str, state: Path) -> None:
+    profile = mini_profile(state)
+    profile.expects_auth = True
+    profile.foreign_tokens = ("token_for_another_service",)
+    with http_fixture(state, break_id=break_id) as target:
+        report = run_checks(target, profile, eras=eras_for(check_id), ids=(check_id,), read_timeout_s=4.0)
+    assert_fires(check_id, break_id, report)
+
+
 # --------------------------------------------------------------- the positives
 
 
 def test_every_check_has_a_fixture_that_breaks_it() -> None:
     """No check may join the kit without something that proves it can fail."""
-    covered = {check_id for check_id, _ in STDIO_VIOLATIONS} | NOT_COVERED_HERE
+    covered = {check_id for check_id, _ in STDIO_VIOLATIONS + HTTP_VIOLATIONS} | NOT_COVERED_HERE
     assert covered >= set(REGISTRY), f"checks with no negative fixture: {sorted(set(REGISTRY) - covered)}"
 
 
@@ -162,3 +217,35 @@ def test_clean_stdio_fixture_passes_everything(state: Path) -> None:
     ]
     assert not failures, f"the clean fixture should satisfy every check: {failures}"
     assert len(report.by_status("passed")) > 20
+
+
+def test_clean_http_fixture_passes_everything(state: Path) -> None:
+    profile = mini_profile(state)
+    profile.expects_auth = True
+    profile.foreign_tokens = ("token_for_another_service",)
+    with http_fixture(state) as target:
+        report = run_checks(target, profile, eras=("stateless",), read_timeout_s=6.0)
+    failures = [
+        (run.label(), run.severity, run.outcome.detail) for run in report.runs if run.status == "failed"
+    ]
+    assert not failures, f"the clean HTTP fixture should satisfy every check: {failures}"
+
+
+def _free_port() -> int:
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        return int(sock.getsockname()[1])
+
+
+def _wait_for_port(port: int, process: subprocess.Popen[bytes], timeout: float = 20.0) -> None:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if process.poll() is not None:  # pragma: no cover
+            stderr = process.stderr.read().decode() if process.stderr else ""
+            raise RuntimeError(f"fixture server exited during startup: {stderr[-800:]}")
+        try:
+            socket.create_connection(("127.0.0.1", port), timeout=0.2).close()
+            return
+        except OSError:
+            time.sleep(0.05)
+    raise RuntimeError(f"fixture server did not open port {port}")  # pragma: no cover
