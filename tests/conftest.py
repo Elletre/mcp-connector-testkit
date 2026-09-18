@@ -10,6 +10,9 @@ Two things here are worth copying into any connector's own suite:
 
 from __future__ import annotations
 
+import json
+import os
+import re
 import sys
 from collections.abc import Iterator
 from pathlib import Path
@@ -146,3 +149,35 @@ def http_conformance(provider: ProviderServer) -> Report:
         )
     control.reset()
     return report
+
+
+# ---------------------------------------------------------------------------
+# A machine-readable record of the run, for the defect matrix. Set MCPQA_RESULTS
+# to a path and every test's outcome and layer lands there as JSON.
+# ---------------------------------------------------------------------------
+
+_RESULTS: list[dict[str, object]] = []
+
+
+def pytest_runtest_logreport(report: pytest.TestReport) -> None:
+    if report.when != "call" and not (report.when == "setup" and report.outcome != "passed"):
+        return
+    _RESULTS.append(
+        {
+            "nodeid": report.nodeid,
+            "outcome": report.outcome,
+            "when": report.when,
+            "layers": sorted(
+                marker
+                for marker in getattr(report, "keywords", {})
+                if re.fullmatch(r"layer[1-5]", str(marker))
+            ),
+        }
+    )
+
+
+def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
+    destination = os.environ.get("MCPQA_RESULTS")
+    if not destination:
+        return
+    Path(destination).write_text(json.dumps({"exitstatus": int(exitstatus), "results": _RESULTS}, indent=2))
