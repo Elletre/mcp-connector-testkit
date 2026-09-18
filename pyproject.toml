@@ -1,0 +1,139 @@
+[project]
+name = "mcpqa"
+version = "0.1.0"
+description = "A five-layer test kit for MCP connectors: protocol conformance, tool contracts, auth and isolation, upstream behaviour, and agent-level evals."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Evgenii Miatlev" }]
+keywords = [
+    "mcp",
+    "model-context-protocol",
+    "testing",
+    "conformance",
+    "llm",
+    "agents",
+    "evals",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Pytest",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Testing",
+    "Typing :: Typed",
+]
+dependencies = [
+    "httpx2>=2.13.0",
+    "jsonschema>=4.20.0",
+    "pydantic>=2.12.0",
+    "pyyaml>=6.0.0",
+    "rich>=13.9.4",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=1.6.0"]
+
+[project.urls]
+Homepage = "https://github.com/evgenii-miatlev/mcp-connector-testkit"
+Issues = "https://github.com/evgenii-miatlev/mcp-connector-testkit/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcpqa"]
+
+[tool.uv.workspace]
+members = ["demo"]
+
+[tool.uv.sources]
+acme-mail-demo = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "acme-mail-demo",
+    "coverage[toml]>=7.6",
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "pytest-timeout>=2.3",
+    "pytest-xdist>=3.6",
+    "ruff>=0.14",
+    "types-jsonschema>=4.20",
+    "types-pyyaml>=6.0",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+src = ["src", "demo/src", "tests", "tools"]
+
+[tool.ruff.lint]
+select = [
+    "ARG", # unused arguments
+    "B",   # bugbear
+    "C4",  # comprehensions
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # import order
+    "PTH", # pathlib over os.path
+    "RUF",
+    "SIM",
+    "T20", # no print() — servers must not write to stdout
+    "UP",
+    "W",
+]
+
+# En dashes and multiplication signs in report text are typography, not typos.
+ignore = ["RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ARG001", "ARG002", "E501"]
+"src/mcpqa/cli.py" = ["T201"]
+# Adapters implement a shared protocol; not every adapter needs every argument.
+"src/mcpqa/evals/adapters/*.py" = ["ARG002", "ARG003"]
+"tools/**" = ["T20"]
+"tests/fixture_servers/**" = ["T20"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src/mcpqa"]
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["mcpqa.*"]
+disallow_any_explicit = false
+
+[[tool.mypy.overrides]]
+# An optional dependency: installed with `mcpqa[anthropic]`, imported lazily.
+module = ["anthropic", "anthropic.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+timeout = 90
+markers = [
+    "layer1: protocol and transport conformance",
+    "layer2: tool contracts and annotation truthfulness",
+    "layer3: authorization, tenancy and secret handling",
+    "layer4: upstream API behaviour",
+    "layer5: agent-level evaluation (needs a model; not part of the PR gate)",
+    "slow: takes more than a couple of seconds",
+]
+
+[tool.coverage.run]
+source = ["src/mcpqa"]
+branch = true
+
+[tool.coverage.report]
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@overload",
+]
