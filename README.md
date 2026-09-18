@@ -3,7 +3,7 @@
 **A five-layer test kit for MCP connectors — and a measurement, defect by defect, of
 which layer catches what.**
 
-[![ci](https://github.com/evgenii-miatlev/mcp-connector-testkit/actions/workflows/ci.yml/badge.svg)](https://github.com/evgenii-miatlev/mcp-connector-testkit/actions/workflows/ci.yml)
+[![ci](https://github.com/Elletre/mcp-connector-testkit/actions/workflows/ci.yml/badge.svg)](https://github.com/Elletre/mcp-connector-testkit/actions/workflows/ci.yml)
 ![python](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue)
 ![mcp](https://img.shields.io/badge/MCP-2025--11--25%20%2B%202026--07--28-6f42c1)
 ![license](https://img.shields.io/badge/license-MIT-green)
@@ -88,7 +88,7 @@ Three properties make that table worth trusting:
 ## Quick start
 
 ```bash
-git clone https://github.com/evgenii-miatlev/mcp-connector-testkit
+git clone https://github.com/Elletre/mcp-connector-testkit
 cd mcp-connector-testkit
 uv sync --all-groups
 make check          # lint, types, unit tests, layers 1-4 and the layer-5 replay (about 80 s)

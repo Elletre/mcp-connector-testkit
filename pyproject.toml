@@ -37,8 +37,8 @@ dependencies = [
 anthropic = ["anthropic>=1.6.0"]
 
 [project.urls]
-Homepage = "https://github.com/evgenii-miatlev/mcp-connector-testkit"
-Issues = "https://github.com/evgenii-miatlev/mcp-connector-testkit/issues"
+Homepage = "https://github.com/Elletre/mcp-connector-testkit"
+Issues = "https://github.com/Elletre/mcp-connector-testkit/issues"
 
 [project.scripts]
 mcpqa = "mcpqa.cli:main"
