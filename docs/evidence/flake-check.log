@@ -1,0 +1,24 @@
+# make layers, 20 consecutive runs: uv run pytest -m 'layer1 or layer2 or layer3 or layer4' -n 4
+# 2026-09-18, Apple M1 Pro (8 cores, 16 GB), macOS, Python 3.12.6; run while a local model evaluation
+# (Ollama, llama3 8B) and other test runs were loading the same machine.
+run 1 exit=0 31s :: 83 passed in 30.29s
+run 2 exit=0 30s :: 83 passed in 29.62s
+run 3 exit=0 30s :: 83 passed in 29.53s
+run 4 exit=0 30s :: 83 passed in 29.09s
+run 5 exit=0 30s :: 83 passed in 29.94s
+run 6 exit=0 31s :: 83 passed in 29.84s
+run 7 exit=0 28s :: 83 passed in 27.26s
+run 8 exit=0 29s :: 83 passed in 29.41s
+run 9 exit=0 30s :: 83 passed in 29.28s
+run 10 exit=0 30s :: 83 passed in 29.02s
+run 11 exit=0 30s :: 83 passed in 29.61s
+run 12 exit=0 27s :: 83 passed in 27.02s
+run 13 exit=0 30s :: 83 passed in 29.11s
+run 14 exit=0 30s :: 83 passed in 29.55s
+run 15 exit=0 30s :: 83 passed in 29.09s
+run 16 exit=0 30s :: 83 passed in 29.47s
+run 17 exit=0 29s :: 83 passed in 29.29s
+run 18 exit=0 31s :: 83 passed in 29.84s
+run 19 exit=0 30s :: 83 passed in 29.49s
+run 20 exit=0 30s :: 83 passed in 29.81s
+=== flake20 done 17:40:41 ===
