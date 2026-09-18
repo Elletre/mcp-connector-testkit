@@ -1,13 +1,22 @@
-"""The raw clients, where they meet servers that do unusual things."""
+"""The raw clients and the runner, where they meet servers that do unusual things."""
 
 from __future__ import annotations
 
 import sys
+import time
+from dataclasses import replace
+from pathlib import Path
 
 import httpx2 as httpx
+import pytest
 
+from mcpqa.checks import run_checks
+from mcpqa.checks.model import REGISTRY, Ctx, Outcome, passed
+from mcpqa.target import StdioTarget
 from mcpqa.wire.http import HttpWire
 from mcpqa.wire.stdio import StdioWire
+
+MINI = Path(__file__).resolve().parents[1] / "fixture_servers/mini_stdio.py"
 
 ASKS_BEFORE_ANSWERING = r"""
 import json, sys
@@ -42,3 +51,22 @@ def test_the_answer_is_picked_out_of_an_event_stream() -> None:
 
     assert payload == {"jsonrpc": "2.0", "id": 7, "result": {"ok": True}}
     assert note == "3 SSE events"
+
+
+def test_one_check_that_kills_the_server_does_not_fail_the_checks_after_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def kill(ctx: Ctx) -> Outcome:
+        assert isinstance(ctx.session.wire, StdioWire)
+        ctx.session.wire.send_raw("this is not JSON\n")
+        deadline = time.monotonic() + 5
+        while ctx.session.alive and time.monotonic() < deadline:
+            time.sleep(0.05)
+        return passed("the server is gone")
+
+    monkeypatch.setitem(REGISTRY, "P-000", replace(REGISTRY["P-001"], id="P-000", run=kill))
+    target = StdioTarget(command=[sys.executable, str(MINI)], env={"MINI_BREAK": "dies-on-garbage"})
+
+    report = run_checks(target, ids=("P-000", "P-001"), eras=("stateless",))
+
+    assert [(run.check.id, run.status) for run in report.runs] == [("P-000", "passed"), ("P-001", "passed")]
