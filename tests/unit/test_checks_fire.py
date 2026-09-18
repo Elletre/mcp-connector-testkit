@@ -69,6 +69,10 @@ STDIO_VIOLATIONS = [
     ("C-003", "bad-structured-content"),
     ("C-004", "structured-only"),
     ("C-005", "empty-error"),
+    ("A-001", "readonly-mutates"),
+    ("A-002", "destructive-lies"),
+    ("A-003", "idempotent-lies"),
+    ("A-004", "unannotated-mutation"),
 ]
 
 HTTP_VIOLATIONS = [
