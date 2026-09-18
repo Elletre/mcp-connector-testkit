@@ -4,7 +4,7 @@ Importing this package registers every check, which is why the imports below
 look unused.
 """
 
-from . import http, protocol  # noqa: F401 - registration side effect
+from . import contracts, http, protocol  # noqa: F401 - registration side effect
 from .model import (
     Check,
     Ctx,

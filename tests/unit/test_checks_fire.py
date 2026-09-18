@@ -64,6 +64,11 @@ STDIO_VIOLATIONS = [
     ("P-018", "slow-serial"),
     ("P-019", "no-capabilities"),
     ("P-020", "unknown-tool-500"),
+    ("C-001", "strict-optional"),
+    ("C-002", "accepts-anything"),
+    ("C-003", "bad-structured-content"),
+    ("C-004", "structured-only"),
+    ("C-005", "empty-error"),
 ]
 
 HTTP_VIOLATIONS = [
