@@ -1,0 +1,34 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    name: lint, types, layers 1-4 (python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - run: uv sync --all-groups --locked
+      - name: Lint
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Types
+        run: uv run mypy
+      - name: Generated docs are current
+        run: uv run python tools/gen_docs.py --check
+      - name: Unit tests, the checks' own fixtures, and the spec quotes
+        run: uv run pytest tests/unit -n 4
+      - name: Layers 1-4 against the demo connector
+        run: uv run pytest -m "layer1 or layer2 or layer3 or layer4" -n 4
+      - name: Agent-evaluation pipeline, replayed from a recorded run
+        run: uv run pytest tests/layer5_agent

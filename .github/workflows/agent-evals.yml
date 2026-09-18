@@ -1,0 +1,37 @@
+name: agent evals
+
+# Layer 5 needs a model, so it is not part of the pull-request gate. It runs on
+# demand, and against Claude when an ANTHROPIC_API_KEY secret is configured.
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "anthropic:MODEL, openai:MODEL, or replay:PATH"
+        default: "anthropic:claude-opus-5"
+      repeats:
+        description: "repeats per case"
+        default: "3"
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --all-groups --all-extras --locked
+      - name: Run the cases
+        run: >
+          uv run mcpqa evals run --environment evals/acme_environment.py:make
+          --model "${{ inputs.model }}" --repeats "${{ inputs.repeats }}" --out out/evals
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: agent-evals
+          path: out/evals/

@@ -1,0 +1,38 @@
+name: defect matrix
+
+# The kit's own mutation score: every seeded defect must be caught by at least
+# one layer. Slow (the whole suite, once per defect), so nightly and on demand.
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "src/mcpqa/checks/**"
+      - "demo/src/acme_mail_mcp/defects.py"
+      - "tests/layer*/**"
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --all-groups --locked
+      - name: Run every defect through layers 1-4
+        run: >
+          uv run python tools/defect_matrix.py --jobs 4
+          --agent-results
+          vague-tool-descriptions=evals/results/compare-vague-tool-descriptions.json
+          untrusted-content-unmarked=evals/results/compare-untrusted-content-unmarked.json
+          --out out/defect-matrix.md --json-out out/defect-matrix.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: defect-matrix
+          path: out/
