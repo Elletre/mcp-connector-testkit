@@ -40,6 +40,9 @@ anthropic = ["anthropic>=1.6.0"]
 Homepage = "https://github.com/evgenii-miatlev/mcp-connector-testkit"
 Issues = "https://github.com/evgenii-miatlev/mcp-connector-testkit/issues"
 
+[project.scripts]
+mcpqa = "mcpqa.cli:main"
+
 [project.entry-points.pytest11]
 mcpqa = "mcpqa.pytest_plugin"
 
