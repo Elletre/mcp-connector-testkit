@@ -26,6 +26,7 @@ RUNS = {
     "`untrusted-content-unmarked`": "2026-09-18-llama3-8b-untrusted-content-unmarked",
 }
 SAMPLED = "2026-09-18-llama3-8b-baseline-temperature-0.8"
+REPEAT = "2026-09-28-llama3-8b-clean-repeat"
 COMPARISONS = {
     "`vague-tool-descriptions`": "compare-vague-tool-descriptions.json",
     "`untrusted-content-unmarked`": "compare-untrusted-content-unmarked.json",
@@ -96,11 +97,27 @@ def render() -> str:
             f"| {sampled['model']} | {rate(sampled['pass_rate'])} | {sampled['pass_hat_k']:.0%} | "
             f"{sampled['repeat_agreement']:.0%} |",
         ]
+    repeat_path = RESULTS / REPEAT / "summary.json"
+    listed = [*RUNS.values(), SAMPLED]
+    if repeat_path.exists():
+        repeat = load(REPEAT)
+        identical = sum(
+            1
+            for case, outcomes in base["case_outcomes"].items()
+            if repeat["case_outcomes"].get(case) == outcomes
+        )
+        lines += [
+            "",
+            f"The same clean run again on {repeat['started_at'][:10]}, unchanged settings: "
+            f"{rate(repeat['pass_rate'])}, and {identical} of {len(base['case_outcomes'])} cases "
+            "gave the identical verdict on every repeat. At temperature 0 this evaluation "
+            "reproduces trial for trial ten days apart, which is what makes a difference "
+            "between two runs attributable to the connector.",
+        ]
+        listed.append(REPEAT)
     lines += [
         "",
-        "Runs: "
-        + " · ".join(f"[`{name}`](../evals/results/{name})" for name in [*RUNS.values(), SAMPLED])
-        + ".",
+        "Runs: " + " · ".join(f"[`{name}`](../evals/results/{name})" for name in listed) + ".",
     ]
     return "\n".join(lines)
 

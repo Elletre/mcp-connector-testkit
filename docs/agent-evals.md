@@ -100,7 +100,9 @@ The clean connector again, sampled instead of greedy:
 | ollama/llama3:latest | 44% (28%–63%) | 44% | 100% |
 | ollama/llama3:latest at temperature 0.8 | 42% (26%–60%) | 19% | 52% |
 
-Runs: [`2026-09-18-llama3-8b-baseline`](../evals/results/2026-09-18-llama3-8b-baseline) · [`2026-09-18-llama3-8b-vague-tool-descriptions`](../evals/results/2026-09-18-llama3-8b-vague-tool-descriptions) · [`2026-09-18-llama3-8b-untrusted-content-unmarked`](../evals/results/2026-09-18-llama3-8b-untrusted-content-unmarked) · [`2026-09-18-llama3-8b-baseline-temperature-0.8`](../evals/results/2026-09-18-llama3-8b-baseline-temperature-0.8).
+The same clean run again on 2026-09-28, unchanged settings: 44% (28%–63%), and 27 of 27 cases gave the identical verdict on every repeat. At temperature 0 this evaluation reproduces trial for trial ten days apart, which is what makes a difference between two runs attributable to the connector.
+
+Runs: [`2026-09-18-llama3-8b-baseline`](../evals/results/2026-09-18-llama3-8b-baseline) · [`2026-09-18-llama3-8b-vague-tool-descriptions`](../evals/results/2026-09-18-llama3-8b-vague-tool-descriptions) · [`2026-09-18-llama3-8b-untrusted-content-unmarked`](../evals/results/2026-09-18-llama3-8b-untrusted-content-unmarked) · [`2026-09-18-llama3-8b-baseline-temperature-0.8`](../evals/results/2026-09-18-llama3-8b-baseline-temperature-0.8) · [`2026-09-28-llama3-8b-clean-repeat`](../evals/results/2026-09-28-llama3-8b-clean-repeat).
 <!-- RESULTS:END -->
 
 Recorded on an Apple M1 Pro (16 GB) with Ollama 0.17.7 and `llama3:latest` (8B, Q4_0),
